@@ -1,40 +1,45 @@
 "use strict";
+
 // Import dependencies
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bodyParser = require('body-parser');
-
-// Initialize the app and database
+const session = require('express-session');
+const multer = require('multer');
 const app = express();
-const db = new sqlite3.Database('./deSebastian_webdb.db'); // SQLite database file
+const shopRoutes = require('./routes/shop.route'); // Ensure this path is correct
+const adminRoutes = require('./routes/admin.route'); // Ensure this path is correct
+
+// Configure multer for file uploads
+const upload = multer({ dest: 'uploads/' });
 
 // Middleware to parse JSON and serve static files
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serves static files from "public"
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Session configuration
+app.use(session({
+  secret: 'mysecret', // Replace with a more secure secret in production
+  resave: false,
+  saveUninitialized: true,
+}));
 
 // Set up EJS as the view engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views')); // Views directory
+app.set('views', path.join(__dirname, 'views'));
 
-// Routes
+// Route definitions
+app.use('/shop', shopRoutes);
+app.use('/admin', adminRoutes);
+
+// Route for serving the homepage
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html')); // Serve index.html
-});
-
-// Example SQLite database route
-app.get('/products', (req, res) => {
-    db.all('SELECT * FROM products', [], (err, rows) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send('Database query error');
-        }
-        res.json(rows); // Send database rows as JSON
-    });
+  res.render('index'); // Render the homepage template
 });
 
 // Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

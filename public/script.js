@@ -60,3 +60,33 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+async function loadProducts() {
+    const response = await fetch('/shop/products');
+    const products = await response.json();
+  
+    const productContainer = document.getElementById('product-list');
+    productContainer.innerHTML = '';
+  
+    products.forEach(product => {
+      const productDiv = document.createElement('div');
+      productDiv.classList.add('product');
+      productDiv.innerHTML = `
+        <h2>${product.name}</h2>
+        <p>Price: $${product.price.toFixed(2)}</p>
+        <button onclick="addToCart(${product.id})">Add to Cart</button>
+      `;
+      productContainer.appendChild(productDiv);
+    });
+  }
+  
+  async function addToCart(productId) {
+    await fetch('/shop/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, quantity: 1 }),
+    });
+    alert('Product added to cart!');
+  }
+  
+  loadProducts();
